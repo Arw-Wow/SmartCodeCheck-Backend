@@ -1,0 +1,37 @@
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+
+# --- 请求模型 ---
+
+class AnalysisRequest(BaseModel):
+    code_content: str = Field(..., description="待检测的代码片段", min_length=1)
+    language: str = Field(..., description="编程语言", example="Python")
+    dimensions: List[str] = Field(..., description="检测维度", example=["correctness", "security"])
+
+class ComparisonRequest(BaseModel):
+    code_a: str
+    code_b: str
+    language: str
+    dimensions: List[str]
+
+# --- 响应模型 (与前端一致) ---
+
+class IssueDetail(BaseModel):
+    dimension: str
+    type: str = Field(..., description="Warning, Error, Info")
+    description: str
+    line: Optional[int] = None
+    suggestion: str
+
+class AnalysisResponse(BaseModel):
+    score: int
+    issues: List[IssueDetail]
+
+class ComparisonResponse(BaseModel):
+    summary: str
+    score_a: int
+    score_b: int
+    dimension_scores: Dict[str, List[int]] # {"efficiency": [80, 90]}
+    # 嵌套详细分析，可选
+    details_a: Optional[AnalysisResponse] = None
+    details_b: Optional[AnalysisResponse] = None
