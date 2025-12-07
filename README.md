@@ -2,6 +2,7 @@
 
 ### 📂 项目结构
 
+```
 llm_code_eval_backend/
 ├── .env                 # 环境变量文件 (存放 API Key)
 ├── requirements.txt     # 依赖包
@@ -21,8 +22,7 @@ llm_code_eval_backend/
 │   └── services/
 │       ├── __init__.py
 │       └── llm_analyzer.py # 核心业务逻辑
-
-
+```
 
 ### 🚀 如何运行后端
 
