@@ -12,6 +12,16 @@ class LLMService:
             base_url=settings.OPENAI_BASE_URL if settings.OPENAI_BASE_URL else None
         )
 
+    def _build_dimension_instruction(self, dimensions: list, custom_defs: dict) -> str:
+        """辅助函数：构建维度说明"""
+        desc = f"请重点分析以下维度: {', '.join(dimensions)}。"
+        if custom_defs:
+            desc += "\n注意以下自定义维度的特定定义："
+            for name, definition in custom_defs.items():
+                if name in dimensions: # 只有当该维度被选中时才添加定义
+                    desc += f"\n- 【{name}】: {definition}"
+        return desc
+
     def _clean_json_string(self, json_str: str) -> str:
         """清理 LLM 返回的 Markdown 格式，提取纯 JSON"""
         # 移除 ```json 和 ``` 标记
@@ -21,23 +31,27 @@ class LLMService:
         return cleaned.strip()
 
     async def analyze_code(self, req: AnalysisRequest) -> AnalysisResponse:
+        # 构建包含自定义定义的 Prompt
+        dim_instruction = self._build_dimension_instruction(req.dimensions, req.custom_definitions)
+        
         system_prompt = """
-        你是一个资深的代码审计专家。请根据用户提供的代码和维度进行分析。
+        你是一个资深的代码审计专家。
+        {dim_instruction}
         必须严格按照 JSON 格式返回结果，不要包含任何额外的解释文本。
         返回格式模板：
-        {
+        {{
             "score": <0-100的整数>,
             "issues": [
-                {
+                {{
                     "dimension": "<维度名>",
                     "type": "<Error/Warning/Info>",
                     "description": "<问题描述>",
                     "line": <行号int, 如果无法确定填null>,
                     "suggestion": "<修改建议>"
-                }
+                }}
             ]
-        }
-        """
+        }}
+        """.format(dim_instruction=dim_instruction)
         
         user_prompt = f"""
         编程语言: {req.language if req.language == 'Auto' else '根据代码内容判断'}
@@ -76,19 +90,23 @@ class LLMService:
             )
 
     async def compare_codes(self, req: ComparisonRequest) -> ComparisonResponse:
+        # 构建包含自定义定义的 Prompt
+        dim_instruction = self._build_dimension_instruction(req.dimensions, req.custom_definitions)
+
         system_prompt = """
-        你是代码对比专家。请对比两段代码的优劣。
+        你是代码对比专家。
+        {dim_instruction}
         必须严格按照 JSON 格式返回结果。
         返回格式模板：
-        {
+        {{
             "summary": "<一句话总结对比结果>",
             "score_a": <0-100>,
             "score_b": <0-100>,
-            "dimension_scores": {
+            "dimension_scores": {{
                 "<维度名>": [<分数A>, <分数B>] 
-            }
-        }
-        """
+            }}
+        }}
+        """.format(dim_instruction=dim_instruction)
         
         user_prompt = f"""
         编程语言: {req.language if req.language == 'Auto' else '根据代码内容判断'}

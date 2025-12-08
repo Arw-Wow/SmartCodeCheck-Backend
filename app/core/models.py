@@ -7,12 +7,14 @@ class AnalysisRequest(BaseModel):
     code_content: str = Field(..., description="待检测的代码片段", min_length=1)
     language: str = Field(..., description="编程语言", example="Python")
     dimensions: List[str] = Field(..., description="检测维度", example=["correctness", "security"])
+    custom_definitions: Dict[str, str] = {}   # 接收自定义维度的定义 { "维度名": "详细定义" }
 
 class ComparisonRequest(BaseModel):
     code_a: str
     code_b: str
     language: str
     dimensions: List[str]
+    custom_definitions: Dict[str, str] = {}
 
 # --- 响应模型 (与前端一致) ---
 
