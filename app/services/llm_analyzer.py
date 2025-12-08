@@ -40,7 +40,7 @@ class LLMService:
         """
         
         user_prompt = f"""
-        编程语言: {req.language}
+        编程语言: {req.language if req.language == 'Auto' else '根据代码内容判断'}
         检测维度: {', '.join(req.dimensions)}
         代码内容:
         {req.code_content}
@@ -91,8 +91,8 @@ class LLMService:
         """
         
         user_prompt = f"""
-        语言: {req.language}
-        维度: {', '.join(req.dimensions)}
+        编程语言: {req.language if req.language == 'Auto' else '根据代码内容判断'}
+        检测维度: {', '.join(req.dimensions)}
         
         [代码 A]:
         {req.code_a}

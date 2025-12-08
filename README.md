@@ -24,25 +24,24 @@ llm_code_eval_backend/
 │       └── llm_analyzer.py # 核心业务逻辑
 ```
 
-### 🚀 如何运行后端
+### 🚀 运行后端
 
 1.  **安装依赖**:
 
     ```bash
+    conda create -n SCC-Backend python=3.11
     pip install -r requirements.txt
     ```
 
 2.  **配置 API Key**:
-    修改 `.env` 文件，填入你的 `OPENAI_API_KEY`。如果没有 Key，可以在 `llm_analyzer.py` 中把 API 调用部分注释掉，直接返回 Mock 数据用于测试。
+    修改 `.env example` 文件，并将文件名改为 `.env`。如果没有 Key，可以在 `llm_analyzer.py` 中把 API 调用部分注释掉，直接返回 Mock 数据用于测试。
 
 3.  **启动服务**:
 
     ```bash
+    conda activate SCC-Backend
     uvicorn app.main:app --reload --port 8000
     ```
 
 4.  **API 文档**:
     浏览器打开 `http://localhost:8000/docs`，你可以直接在这里测试接口。
-
-5.  **前端联调**:
-    现在你可以回到之前写的 Vue 前端代码中，将 API URL 指向 `http://localhost:8000/api/v1/analyze` 和 `compare`。
