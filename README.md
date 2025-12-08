@@ -44,4 +44,4 @@ llm_code_eval_backend/
     ```
 
 4.  **API 文档**:
-    浏览器打开 `http://localhost:8000/docs`，你可以直接在这里测试接口。
+    浏览器打开 `http://localhost:8000/docs`，可以直接在这里测试接口。
