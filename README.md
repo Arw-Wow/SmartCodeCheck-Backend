@@ -3,7 +3,7 @@
 ### 📂 项目结构
 
 ```
-llm_code_eval_backend/
+SmartCodeCheck-Backend/
 ├── .env                 # 环境变量文件 (存放 API Key)
 ├── requirements.txt     # 依赖包
 ├── app/
