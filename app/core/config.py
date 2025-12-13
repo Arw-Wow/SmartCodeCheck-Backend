@@ -12,7 +12,11 @@ class Settings(BaseSettings):
     MODEL_NAME: str = "deepseek-chat" # 或者 gpt-4o, deepseek-chat
     
     # CORS 配置 (解析 JSON 字符串为列表)
-    CORS_ORIGINS: List[str] = ["http://localhost:5173"]
+    # 默认允许常见的本地开发端口，如果需要可通过环境变量覆盖
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:5174"
+    ]
 
     class Config:
         env_file = ".env"
