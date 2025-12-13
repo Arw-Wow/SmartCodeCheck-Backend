@@ -1,10 +1,2 @@
 # 你的 OpenAI API Key (或者是 DeepSeek/Moonshot 等兼容 API 的 Key)
 OPENAI_API_KEY=
-
-# 如果使用官方接口，留空即可；如果使用中转或国内模型，填入 Base URL
-# 例如 DeepSeek: https://api.deepseek.com/v1
-OPENAI_BASE_URL=
-
-# 允许的前端地址 (解决跨域问题)
-# 字符串，逗号隔开
-CORS_ORIGINS=[]

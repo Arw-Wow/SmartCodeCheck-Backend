@@ -9,6 +9,7 @@ class AnalysisRequest(BaseModel):
     dimensions: List[str] = Field(..., description="检测维度", example=["correctness", "security"])
     custom_definitions: Dict[str, str] = {}   # 接收自定义维度的定义 { "维度名": "详细定义" }
     generation_instruction: Optional[str] = Field(None, description="可选的代码生成指令，用于结合指令评估代码")
+    model_name: Optional[str] = Field(None, description="可选的大模型名称；为空则使用后端默认")
 
 class ComparisonRequest(BaseModel):
     code_a: str
@@ -17,6 +18,7 @@ class ComparisonRequest(BaseModel):
     dimensions: List[str]
     custom_definitions: Dict[str, str] = {}
     generation_instruction: Optional[str] = Field(None, description="可选的统一代码生成指令，用于对比分析时参考")
+    model_name: Optional[str] = Field(None, description="可选的大模型名称；为空则使用后端默认")
 
 # --- 响应模型 (与前端一致) ---
 

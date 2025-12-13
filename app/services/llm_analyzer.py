@@ -4,12 +4,24 @@ from openai import AsyncOpenAI
 from app.core.config import settings
 from app.core.models import AnalysisRequest, AnalysisResponse, ComparisonRequest, ComparisonResponse, IssueDetail
 
+DEFAULT_BASE_URL = "https://api.agicto.cn/v1"
+DEFAULT_MODEL = "deepseek-v3.1"
+
+# 可选择的模型白名单
+AVAILABLE_MODELS = {
+    "qwen3-coder-plus",
+    "gpt-5-mini",
+    "gpt-5",
+    "deepseek-v3.1",
+    "gemini-3-pro-preview",
+}
+
 class LLMService:
     def __init__(self):
-        # 初始化 OpenAI 客户端
+        # 初始化 OpenAI 客户端（统一使用固定 base_url）
         self.client = AsyncOpenAI(
             api_key=settings.OPENAI_API_KEY,
-            base_url=settings.OPENAI_BASE_URL if settings.OPENAI_BASE_URL else None
+            base_url=DEFAULT_BASE_URL
         )
 
     def _build_dimension_instruction(self, dimensions: list, custom_defs: dict) -> str:
@@ -66,8 +78,13 @@ class LLMService:
         """
 
         try:
+            # 选择模型：如果请求中提供且在白名单内，则使用之；否则用默认
+            model = getattr(req, 'model_name', None)
+            if not model or model not in AVAILABLE_MODELS:
+                model = DEFAULT_MODEL
+
             response = await self.client.chat.completions.create(
-                model=settings.MODEL_NAME,
+                model=model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -130,8 +147,12 @@ class LLMService:
         """
 
         try:
+            model = getattr(req, 'model_name', None)
+            if not model or model not in AVAILABLE_MODELS:
+                model = DEFAULT_MODEL
+
             response = await self.client.chat.completions.create(
-                model=settings.MODEL_NAME,
+                model=model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
