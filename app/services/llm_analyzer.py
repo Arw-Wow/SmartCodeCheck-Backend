@@ -53,9 +53,14 @@ class LLMService:
         }}
         """.format(dim_instruction=dim_instruction)
         
+        instruction_part = ""
+        if getattr(req, 'generation_instruction', None):
+            instruction_part = f"\n请结合以下代码指令进行分析：\n{req.generation_instruction}\n"
+
         user_prompt = f"""
         编程语言: {req.language if req.language != 'Auto' else '根据代码内容判断'}
         检测维度: {', '.join(req.dimensions)}
+        {instruction_part}
         代码内容:
         {req.code_content}
         """
@@ -108,9 +113,14 @@ class LLMService:
         }}
         """.format(dim_instruction=dim_instruction)
         
+        instruction_part = ""
+        if getattr(req, 'generation_instruction', None):
+            instruction_part = f"\n请结合以下代码指令进行分析：\n{req.generation_instruction}\n"
+
         user_prompt = f"""
         编程语言: {req.language if req.language != 'Auto' else '根据代码内容判断'}
         检测维度: {', '.join(req.dimensions)}
+        {instruction_part}
         
         [代码 A]:
         {req.code_a}
