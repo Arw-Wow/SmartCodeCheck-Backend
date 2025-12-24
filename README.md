@@ -30,11 +30,12 @@ SmartCodeCheck-Backend/
 
     ```bash
     conda create -n SCC-Backend python=3.11
+    conda activate SCC-Backend
     pip install -r requirements.txt
     ```
 
 2.  **配置 API Key**:
-    修改 `.env example` 文件，并将文件名改为 `.env`。如果没有 Key，可以在 `llm_analyzer.py` 中把 API 调用部分注释掉，直接返回 Mock 数据用于测试。
+    修改 `.env example` 文件，并将文件名改为 `.env`。
 
 3.  **启动服务**:
 

@@ -18,10 +18,16 @@ AVAILABLE_MODELS = {
 
 class LLMService:
     def __init__(self):
-        # 初始化 OpenAI 客户端（统一使用固定 base_url）
+        # 1. 云端客户端
         self.client = AsyncOpenAI(
             api_key=settings.OPENAI_API_KEY,
             base_url=DEFAULT_BASE_URL
+        )
+
+        # 2. 本地客户端
+        self.local_client = AsyncOpenAI(
+            api_key=settings.LOCAL_LLM_API_KEY,
+            base_url=settings.LOCAL_LLM_BASE_URL
         )
 
     def _build_dimension_instruction(self, dimensions: list, custom_defs: dict) -> str:
@@ -78,19 +84,32 @@ class LLMService:
         """
 
         try:
-            # 选择模型：如果请求中提供且在白名单内，则使用之；否则用默认
-            model = getattr(req, 'model_name', None)
-            if not model or model not in AVAILABLE_MODELS:
-                model = DEFAULT_MODEL
+            # --- 模型与客户端选择逻辑 ---
+            req_model = getattr(req, 'model_name', None)
+            
+            # 默认情况：使用云端客户端和默认模型
+            target_client = self.client
+            model_to_use = DEFAULT_MODEL
+            
+            # 判断 1: 如果用户指定了本地模型名称 (在 .env 中配置的名字)
+            if req_model == settings.LOCAL_MODEL_NAME:
+                target_client = self.local_client
+                model_to_use = settings.LOCAL_MODEL_NAME
+                print(f"正在使用本地模型: {model_to_use}")
+                
+            # 判断 2: 如果用户指定了云端白名单内的模型
+            elif req_model and req_model in AVAILABLE_MODELS:
+                model_to_use = req_model
+            # -----------------------------------
 
-            response = await self.client.chat.completions.create(
-                model=model,
+            response = await target_client.chat.completions.create(
+                model=model_to_use,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.2, # 低温度保证输出稳定
-                response_format={"type": "json_object"} # 强制 JSON 模式 (仅部分模型支持，如不支持请注释掉)
+                temperature=0.2,
+                response_format={"type": "json_object"} 
             )
             
             content = response.choices[0].message.content
@@ -147,12 +166,18 @@ class LLMService:
         """
 
         try:
-            model = getattr(req, 'model_name', None)
-            if not model or model not in AVAILABLE_MODELS:
-                model = DEFAULT_MODEL
+            req_model = getattr(req, 'model_name', None)
+            target_client = self.client
+            model_to_use = DEFAULT_MODEL
+            
+            if req_model == settings.LOCAL_MODEL_NAME:
+                target_client = self.local_client
+                model_to_use = settings.LOCAL_MODEL_NAME
+            elif req_model and req_model in AVAILABLE_MODELS:
+                model_to_use = req_model
 
-            response = await self.client.chat.completions.create(
-                model=model,
+            response = await target_client.chat.completions.create(
+                model=model_to_use, 
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
