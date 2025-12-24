@@ -1,2 +1,6 @@
 # 你的 OpenAI API Key (或者是 DeepSeek/Moonshot 等兼容 API 的 Key)
 OPENAI_API_KEY=
+
+LOCAL_LLM_BASE_URL="http://localhost:8080/v1"
+LOCAL_LLM_API_KEY="EMPTY"
+LOCAL_MODEL_NAME="my-finetuned-model"

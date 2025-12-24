@@ -8,6 +8,11 @@ class Settings(BaseSettings):
     
     # 仅保留敏感信息在环境变量
     OPENAI_API_KEY: str
+
+    # --- 本地模型配置 ---
+    LOCAL_LLM_BASE_URL: str = "http://localhost:8080/v1" # 默认本地地址
+    LOCAL_LLM_API_KEY: str = "EMPTY"                     # 本地通常不需要 Key
+    LOCAL_MODEL_NAME: str = "my-finetuned-model"         # 默认本地模型名称
     
     # CORS 配置 (解析 JSON 字符串为列表)
     # 默认允许常见的本地开发端口，如果需要可通过环境变量覆盖
