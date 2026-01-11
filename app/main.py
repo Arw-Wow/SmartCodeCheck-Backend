@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.endpoints import analysis, health
+from app.api.endpoints import analysis, health, auth
+from app.core.database import Base, engine
+from app.api.endpoints import analysis, health, auth, dimensions
+
+# 自动创建数据库表 (Simple Migration)
+Base.metadata.create_all(bind=engine)
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -21,6 +26,8 @@ def create_app() -> FastAPI:
 
     # 注册路由
     app.include_router(health.router, tags=["Health"])
+    app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
+    app.include_router(dimensions.router, prefix="/api/v1/dimensions", tags=["Dimensions"])
     app.include_router(analysis.router, prefix="/api/v1", tags=["Analysis"])
 
     return app
