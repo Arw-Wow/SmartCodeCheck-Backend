@@ -4,3 +4,13 @@ OPENAI_API_KEY=
 LOCAL_LLM_BASE_URL="http://localhost:8080/v1"
 LOCAL_LLM_API_KEY="EMPTY"
 LOCAL_MODEL_NAME="my-finetuned-model"
+
+# 数据库地址 (默认使用 SQLite，文件会生成在当前目录下)
+DATABASE_URL="sqlite:///./sql_app.db"
+
+# JWT 签名密钥 (生产环境请务必修改为随机长字符串)
+# 你可以在终端运行 `openssl rand -hex 32` 生成一个
+SECRET_KEY="change_this_to_a_secure_random_string"
+
+# Token 过期时间 (分钟)
+ACCESS_TOKEN_EXPIRE_MINUTES=10080

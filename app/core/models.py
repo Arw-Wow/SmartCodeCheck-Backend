@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 
 # --- 请求模型 ---
@@ -41,3 +41,37 @@ class ComparisonResponse(BaseModel):
     # 嵌套详细分析，可选
     details_a: Optional[AnalysisResponse] = None
     details_b: Optional[AnalysisResponse] = None
+
+# --- 用户认证相关 Schema ---
+
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6)
+    email: Optional[EmailStr] = None
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    email: Optional[str] = None
+    is_active: bool
+    
+    # 允许从 ORM 模型读取数据
+    class Config:
+        from_attributes = True 
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
+# --- 自定义维度 Schema ---
+class DimensionCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    description: str = Field(..., min_length=1)
+
+class DimensionOut(BaseModel):
+    id: int
+    name: str
+    description: str
+
+    class Config:
+        from_attributes = True

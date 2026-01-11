@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     # 仅保留敏感信息在环境变量
     OPENAI_API_KEY: str
 
+    # --- 数据库与安全配置 (新增) ---
+    DATABASE_URL: str = "sqlite:///./sql_app.db"
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 默认7天
+
     # --- 本地模型配置 ---
     LOCAL_LLM_BASE_URL: str = "http://localhost:8080/v1" # 默认本地地址
     LOCAL_LLM_API_KEY: str = "EMPTY"                     # 本地通常不需要 Key
@@ -25,5 +31,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore" # 忽略多余的环境变量
 
 settings = Settings()
