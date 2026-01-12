@@ -1,8 +1,13 @@
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 
-# --- 请求模型 ---
+# --- 新增：本地模型配置 Schema ---
+class LocalLLMConfig(BaseModel):
+    base_url: str = Field(..., description="本地 LLM API 地址", example="http://localhost:11434/v1")
+    api_key: str = Field("EMPTY", description="API Key (本地通常不需要)")
+    model_name: Optional[str] = Field(None, description="模型名称 (如 llama3, deepseek-coder)")
 
+# --- 请求模型 ---
 class AnalysisRequest(BaseModel):
     code_content: str = Field(..., description="待检测的代码片段", min_length=1)
     language: str = Field(..., description="编程语言", example="Python")
@@ -10,6 +15,7 @@ class AnalysisRequest(BaseModel):
     custom_definitions: Dict[str, str] = {}   # 接收自定义维度的定义 { "维度名": "详细定义" }
     generation_instruction: Optional[str] = Field(None, description="可选的代码生成指令，用于结合指令评估代码")
     model_name: Optional[str] = Field(None, description="可选的大模型名称；为空则使用后端默认")
+    local_config: Optional[LocalLLMConfig] = Field(None, description="自定义本地模型配置")
 
 class ComparisonRequest(BaseModel):
     code_a: str
@@ -19,9 +25,9 @@ class ComparisonRequest(BaseModel):
     custom_definitions: Dict[str, str] = {}
     generation_instruction: Optional[str] = Field(None, description="可选的统一代码生成指令，用于对比分析时参考")
     model_name: Optional[str] = Field(None, description="可选的大模型名称；为空则使用后端默认")
+    local_config: Optional[LocalLLMConfig] = Field(None, description="自定义本地模型配置")
 
 # --- 响应模型 (与前端一致) ---
-
 class IssueDetail(BaseModel):
     dimension: str
     type: str = Field(..., description="Warning, Error, Info")
