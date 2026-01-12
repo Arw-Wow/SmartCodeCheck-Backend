@@ -4,3 +4,4 @@ dist
 __pycache__
 .env
 .venv
+sql_app.db

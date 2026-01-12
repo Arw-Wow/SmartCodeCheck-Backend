@@ -75,3 +75,17 @@ class DimensionOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- 历史记录 Schema ---
+class HistoryCreate(BaseModel):
+    type: str = Field(..., pattern="^(detection|comparison)$")
+    data: Dict[str, Any] # 存储前端 store 中的整个对象
+
+class HistoryOut(BaseModel):
+    id: int
+    type: str
+    data: Dict[str, Any]
+    created_at: Any
+
+    class Config:
+        from_attributes = True
