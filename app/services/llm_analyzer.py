@@ -7,7 +7,7 @@ from app.core.models import AnalysisRequest, AnalysisResponse, ComparisonRequest
 DEFAULT_BASE_URL = "https://api.agicto.cn/v1"
 DEFAULT_MODEL = "deepseek-v3.1"
 
-# 可选择的模型白名单
+# 可选择的云端模型白名单
 AVAILABLE_MODELS = {
     "qwen3-coder-plus",
     "gpt-5-mini",
@@ -18,14 +18,14 @@ AVAILABLE_MODELS = {
 
 class LLMService:
     def __init__(self):
-        # 1. 云端客户端
+        # 1. 云端客户端 (默认)
         self.client = AsyncOpenAI(
             api_key=settings.OPENAI_API_KEY,
             base_url=DEFAULT_BASE_URL
         )
 
-        # 2. 本地客户端
-        self.local_client = AsyncOpenAI(
+        # 2. 预设的本地客户端 (兼容旧配置)
+        self.default_local_client = AsyncOpenAI(
             api_key=settings.LOCAL_LLM_API_KEY,
             base_url=settings.LOCAL_LLM_BASE_URL
         )
@@ -36,20 +36,42 @@ class LLMService:
         if custom_defs:
             desc += "\n注意以下自定义维度的特定定义："
             for name, definition in custom_defs.items():
-                if name in dimensions: # 只有当该维度被选中时才添加定义
+                if name in dimensions:
                     desc += f"\n- 【{name}】: {definition}"
         return desc
 
     def _clean_json_string(self, json_str: str) -> str:
         """清理 LLM 返回的 Markdown 格式，提取纯 JSON"""
-        # 移除 ```json 和 ``` 标记
         cleaned = re.sub(r'^```json\s*', '', json_str, flags=re.MULTILINE)
         cleaned = re.sub(r'^```\s*', '', cleaned, flags=re.MULTILINE)
         cleaned = re.sub(r'\s*```$', '', cleaned, flags=re.MULTILINE)
         return cleaned.strip()
 
+    def _get_client_and_model(self, req):
+        """
+        根据请求参数决定使用哪个客户端和模型名称
+        优先级: 前端传入的 custom local config > 预设本地模型 > 云端模型
+        """
+        # 1. 如果请求包含完整的本地配置 (Custom Local)
+        if req.local_config and req.local_config.base_url:
+            print(f"Using Custom Local LLM at: {req.local_config.base_url}")
+            # 动态创建客户端
+            client = AsyncOpenAI(
+                api_key=req.local_config.api_key or "EMPTY",
+                base_url=req.local_config.base_url
+            )
+            model = req.local_config.model_name or "local-model"
+            return client, model
+
+        # 2. 兼容旧逻辑：如果 model_name 是配置中指定的本地模型名
+        if req.model_name == settings.LOCAL_MODEL_NAME:
+            return self.default_local_client, settings.LOCAL_MODEL_NAME
+
+        # 3. 默认云端逻辑
+        model = req.model_name if req.model_name in AVAILABLE_MODELS else DEFAULT_MODEL
+        return self.client, model
+
     async def analyze_code(self, req: AnalysisRequest) -> AnalysisResponse:
-        # 构建包含自定义定义的 Prompt
         dim_instruction = self._build_dimension_instruction(req.dimensions, req.custom_definitions)
         
         system_prompt = """
@@ -84,24 +106,8 @@ class LLMService:
         """
 
         try:
-            # --- 模型与客户端选择逻辑 ---
-            req_model = getattr(req, 'model_name', None)
+            target_client, model_to_use = self._get_client_and_model(req)
             
-            # 默认情况：使用云端客户端和默认模型
-            target_client = self.client
-            model_to_use = DEFAULT_MODEL
-            
-            # 判断 1: 如果用户指定了本地模型名称 (在 .env 中配置的名字)
-            if req_model == settings.LOCAL_MODEL_NAME:
-                target_client = self.local_client
-                model_to_use = settings.LOCAL_MODEL_NAME
-                print(f"正在使用本地模型: {model_to_use}")
-                
-            # 判断 2: 如果用户指定了云端白名单内的模型
-            elif req_model and req_model in AVAILABLE_MODELS:
-                model_to_use = req_model
-            # -----------------------------------
-
             response = await target_client.chat.completions.create(
                 model=model_to_use,
                 messages=[
@@ -114,24 +120,21 @@ class LLMService:
             
             content = response.choices[0].message.content
             data = json.loads(self._clean_json_string(content))
-            
             return AnalysisResponse(**data)
             
         except Exception as e:
             print(f"LLM Error: {e}")
-            # 发生错误时的兜底返回，防止前端崩溃
             return AnalysisResponse(
                 score=0,
                 issues=[IssueDetail(
                     dimension="系统",
                     type="Error",
                     description=f"模型分析失败: {str(e)}",
-                    suggestion="请检查 API Key 配置或网络连接"
+                    suggestion="请检查 API Key 配置、本地服务地址或网络连接"
                 )]
             )
 
     async def compare_codes(self, req: ComparisonRequest) -> ComparisonResponse:
-        # 构建包含自定义定义的 Prompt
         dim_instruction = self._build_dimension_instruction(req.dimensions, req.custom_definitions)
 
         system_prompt = """
@@ -166,15 +169,7 @@ class LLMService:
         """
 
         try:
-            req_model = getattr(req, 'model_name', None)
-            target_client = self.client
-            model_to_use = DEFAULT_MODEL
-            
-            if req_model == settings.LOCAL_MODEL_NAME:
-                target_client = self.local_client
-                model_to_use = settings.LOCAL_MODEL_NAME
-            elif req_model and req_model in AVAILABLE_MODELS:
-                model_to_use = req_model
+            target_client, model_to_use = self._get_client_and_model(req)
 
             response = await target_client.chat.completions.create(
                 model=model_to_use, 
@@ -189,7 +184,6 @@ class LLMService:
             content = response.choices[0].message.content
             data = json.loads(self._clean_json_string(content))
             
-            # 这里简化处理，details_a/b 可以设为 None，或者另外调用 analyze_code 获取详情
             return ComparisonResponse(
                 summary=data['summary'],
                 score_a=data['score_a'],
