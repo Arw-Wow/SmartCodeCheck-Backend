@@ -68,8 +68,8 @@ app/
 ### 1. 创建运行环境
 
 ```bash
-conda create -n scc-backend python=3.11
-conda activate scc-backend
+conda create -n SCC-Backend python=3.11
+conda activate SCC-Backend
 pip install -r requirements.txt
 ```
 
@@ -84,7 +84,7 @@ pip install -r requirements.txt
 ### 3. 启动服务（默认端口为 8000）
 
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 
 ---
